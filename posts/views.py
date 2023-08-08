@@ -1,12 +1,27 @@
 from rest_framework import generics, mixins, status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
 
 from accounts.serializers import CurrentUserPostsSerializer
 from posts.models import Post
+from posts.permissions import OwnerOrReadOnly, AuthorOrReadOnly
 from posts.serializers import PostSerializer
+
+
+@api_view(http_method_names=["GET", "POST"])
+@permission_classes([AllowAny])
+def homepage(request: Request):
+    if request.method == "POST":
+        data = request.data
+
+        response = {"message": "Hello World", "data": data}
+
+        return Response(data=response, status=status.HTTP_201_CREATED)
+
+    response = {"message": "Hello World"}
+    return Response(data=response, status=status.HTTP_200_OK)
 
 
 class PostListCreateView(
@@ -19,7 +34,7 @@ class PostListCreateView(
     """
 
     serializer_class = PostSerializer
-    permission_classes = [IsAuthenticated]
+    permission_classes = [OwnerOrReadOnly]
     queryset = Post.objects.all()
 
     def perform_create(self, serializer):
@@ -42,7 +57,7 @@ class PostRetrieveUpdateDeleteView(
 ):
     serializer_class = PostSerializer
     queryset = Post.objects.all()
-    permission_classes = [IsAuthenticated]
+    permission_classes = [AuthorOrReadOnly]
 
     def get(self, request: Request, *args, **kwargs):
         return self.retrieve(request, *args, **kwargs)
@@ -61,3 +76,26 @@ def get_posts_for_current_user(request: Request):
     serializer = CurrentUserPostsSerializer(instance=user, context={"request": request})
 
     return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+
+class ListPostsForAuthor(
+    generics.GenericAPIView,
+    mixins.ListModelMixin
+):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        username = self.request.query_params.get("username") or None
+
+        queryset = Post.objects.all()
+
+        if username is not None:
+            return Post.objects.filter(author__username=username)
+
+        return queryset
+
+    def get(self, request: Request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
