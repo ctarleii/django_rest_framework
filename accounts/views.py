@@ -1,4 +1,5 @@
 from django.contrib.auth import authenticate
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import generics, status
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -11,6 +12,10 @@ from accounts.tokens import create_jwt_pair_for_user
 class SignUpView(generics.GenericAPIView):
     serializer_class = SignUpSerializer
 
+    @swagger_auto_schema(
+        operation_summary="Create a user account",
+        operation_description="This sign up a user"
+    )
     def post(self, request: Request):
         data = request.data
 
@@ -31,6 +36,10 @@ class SignUpView(generics.GenericAPIView):
 
 class LoginView(APIView):
 
+    @swagger_auto_schema(
+        operation_summary="Generate JWT pair",
+        operation_description="This logins a user with email and password"
+    )
     def post(self, request: Request):
         email = request.data.get('email')
         password = request.data.get('password')
@@ -50,6 +59,10 @@ class LoginView(APIView):
             "message": "Invalid data"
         })
 
+    @swagger_auto_schema(
+        operation_summary="Get request info",
+        operation_description="This show a request info"
+    )
     def get(self, request: Request):
         content = {
             'user': str(request.user),

@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     # third-party-apps
     'rest_framework',
     'rest_framework.authtoken',
+    'drf_yasg',
 
     # my apps
     'posts',
@@ -64,13 +65,23 @@ ROOT_URLCONF = 'simpleBlog.urls'
 REST_FRAMEWORK = {
     "NON_FIELD_ERRORS_KEY": "errors",
     "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
-        "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
     "DEFAULT_PERMISSIONS_CLASSES": [
         "rest_framework.permissions.IsAuthenticated",
-    ]
+    ],
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.LimitOffsetPagination",
+    "PAGE_SIZE": 3,
+}
+
+SWAGGER_SETTINGS = {
+   'SECURITY_DEFINITIONS': {
+      'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header'
+      }
+   }
 }
 
 SIMPLE_JWT = {
